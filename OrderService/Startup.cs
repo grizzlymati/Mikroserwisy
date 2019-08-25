@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using OrderService.DBContext;
 using OrderService.Events;
 using OrderService.Events.Interfaces;
@@ -21,9 +14,14 @@ namespace OrderService
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IHostingEnvironment env, IConfiguration configuration)
         {
-            Configuration = configuration;
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(env.ContentRootPath)
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+                .AddEnvironmentVariables();
+
+            Configuration = builder.Build();
         }
 
         public IConfiguration Configuration { get; }
@@ -32,12 +30,13 @@ namespace OrderService
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddOptions();
+
             services.Configure<AMQPOptions>(Configuration.GetSection("amqp"));
-
-            services.AddDbContext<IOrderContext,OrderContext>(o => o.UseSqlServer(Configuration.GetConnectionString("OrderDB")));
-
-            services.AddTransient(typeof(IOrderRepository), typeof(OrderRepository));
             services.AddSingleton(typeof(IEventEmitter), typeof(AMQPEventEmitter));
+            services.AddDbContext<OrderContext>(o => o.UseSqlServer(Configuration.GetConnectionString("OrderDB")));
+            services.AddScoped<IOrderContext>(provider => (IOrderContext)provider.GetService(typeof(OrderContext)));
+            services.AddTransient(typeof(IOrderRepository), typeof(OrderRepository));
             services.AddSingleton(typeof(ICommandEventConverter), typeof(CommandEventConverter));
 
         }
@@ -55,7 +54,10 @@ namespace OrderService
             }
 
             app.UseHttpsRedirection();
-            app.UseMvc();
+            app.UseMvc(routes =>
+            {
+                routes.MapRoute("default", "{controller=Home}/{action=Index}/{id?}");
+            });
         }
     }
 }

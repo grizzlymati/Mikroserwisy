@@ -27,7 +27,6 @@ namespace ProductService
                .AddEnvironmentVariables();
 
             Configuration = builder.Build();
-            //Configuration = configuration;
         }
 
         public IConfiguration Configuration { get; }

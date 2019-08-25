@@ -1,10 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using OrderService.Events;
 using OrderService.Models;
 using OrderService.Repository;
 using System.Transactions;
-using OrderService.Events.Interfaces;
-using System.Collections.Generic;
 
 namespace OrderService.Controllers
 {
@@ -14,62 +11,49 @@ namespace OrderService.Controllers
     {
 
         private readonly IOrderRepository _orderRepository;
-        private ICommandEventConverter _converter;
-        private IEventEmitter _eventEmitter;
+        
 
-        public OrderController(IOrderRepository orderRepository, ICommandEventConverter converter, IEventEmitter eventEmitter)
+        public OrderController(IOrderRepository orderRepository)
         {
             _orderRepository = orderRepository;
-            _converter = converter;
-            _eventEmitter = eventEmitter;
         }
 
-        [HttpGet("{id}", Name = "Get")]
-        public IActionResult Get(int userId)
+        [HttpGet]
+        //[Route("api/[controller]/GetAllOrders")]
+        public IActionResult GetAllOrders(int userId)
         {
-          //  int statusCode = _orderRepository.DeleteOrder(userId);
-           // string ordersData = _orderRepository.GetOrdersDataByID(userId);
-            ReleasedProductsDataEvent releasedProductsDataEvent = new ReleasedProductsDataEvent() { ProductsDetails = new List<ProductDetails>() { new ProductDetails() { ProductAmount = 21, ProductId = 37} } };//_converter.CommandToEvent(ordersData) as ReleasedProductsDataEvent;
-            _eventEmitter.EmitReleasedProductsDataEvent(releasedProductsDataEvent);
+            var orders = _orderRepository.GetOrdersByUserID(userId);
 
-            TakenProductsDataEvent takenProductsDataEventEvent= new TakenProductsDataEvent() { ProductsDetails = new List<ProductDetails>() { new ProductDetails() { ProductAmount = 9, ProductId = 11 } } };//_converter.CommandToEvent(ordersData) as ReleasedProductsDataEvent;
-            _eventEmitter.EmitTakenProductsDataEvent(takenProductsDataEventEvent);
-
-            var order = _orderRepository.GetOrdersByUserID(userId); 
-            return new OkObjectResult(order);
+            return new OkObjectResult(orders);
         }
 
         [HttpPost]
-        public IActionResult Post([FromBody] Order order)
+        public IActionResult CreateNewOrder([FromBody] Order order)
         {
             using (var scope = new TransactionScope())
             {
                 _orderRepository.InsertOrder(order);
                 scope.Complete();
-                TakenProductsDataEvent takenProductsDataEvent = _converter.CommandToEvent(order.OrdersData) as TakenProductsDataEvent;
-                _eventEmitter.EmitTakenProductsDataEvent(takenProductsDataEvent);
-                return CreatedAtAction(nameof(Get), new { id = order.Id }, order);
+                return Ok();
             }
         }
 
         [HttpPut]
-        public IActionResult Put([FromBody] int orderId, int orderStatusCode)
+        public IActionResult UpdateOrdersStatus([FromBody] int orderId, int orderStatusCode)
         {
             using (var scope = new TransactionScope())
             {
                 _orderRepository.UpdateOrder(orderId, orderStatusCode);
                 scope.Complete();
-                return new OkResult();
+                return Ok();
             }
         }
 
-        [HttpDelete("{id}", Name="Delete")]
-        public IActionResult Delete(int orderId)
+        [HttpDelete]
+        public IActionResult DeleteOrder(int orderId)
         {
-            int statusCode = _orderRepository.DeleteOrder(orderId);
-            string ordersData = _orderRepository.GetOrdersDataByID(orderId);
-            ReleasedProductsDataEvent releasedProductsDataEvent = _converter.CommandToEvent(ordersData) as ReleasedProductsDataEvent;
-            _eventEmitter.EmitReleasedProductsDataEvent(releasedProductsDataEvent);
+            int statusCode = _orderRepository.DeleteOrder(orderId);            
+
             return Ok(statusCode);
         }
     }

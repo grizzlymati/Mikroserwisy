@@ -3,17 +3,22 @@ using OrderService.Models;
 using OrderService.DBContext;
 using System.Linq;
 using OrderService.Enums;
-using Microsoft.EntityFrameworkCore;
+using OrderService.Events.Interfaces;
+using OrderService.Events;
 
 namespace OrderService.Repository
 {
     public class OrderRepository : IOrderRepository
     {
         private readonly IOrderContext _dbContext;
+        private ICommandEventConverter _converter;
+        private IEventEmitter _eventEmitter;
 
-        public OrderRepository()
+        public OrderRepository(ICommandEventConverter converter, IEventEmitter eventEmitter, IOrderContext orderContext)
         {
-            _dbContext = new OrderContext(new DbContextOptions<OrderContext>());
+            _dbContext = orderContext;
+            _converter = converter;
+            _eventEmitter = eventEmitter;
         }
 
         public IEnumerable<Order> GetOrdersByUserID(int userId)
@@ -26,8 +31,12 @@ namespace OrderService.Repository
             Order order = _dbContext.Orders.Find(orderId);
             if (CanDeleteOrder(order.StatusCode))
             {
+                ReleasedProductsDataEvent releasedProductsDataEvent = _converter.CommandToEvent(order.OrdersData) as ReleasedProductsDataEvent;
+                _eventEmitter.EmitReleasedProductsDataEvent(releasedProductsDataEvent);
+
                 _dbContext.Orders.Remove(order);
                 SaveChanges();
+
                 return (int)DeleteOrderStatusCode.DeletedSuccessfuly;
             }
             else
@@ -39,6 +48,9 @@ namespace OrderService.Repository
         public void InsertOrder(Order order)
         {
             _dbContext.Orders.Add(order);
+            TakenProductsDataEvent takenProductsDataEvent = _converter.CommandToEvent(order.OrdersData) as TakenProductsDataEvent;
+            _eventEmitter.EmitTakenProductsDataEvent(takenProductsDataEvent);
+
             SaveChanges();
         }
 

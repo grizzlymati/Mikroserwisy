@@ -19,7 +19,7 @@ namespace OrderService.Events
 
         private const string QUEUE_TAKEN_PRODUCTS = "takenProductsDataEvent";
 
-        public AMQPEventEmitter(IOptions<AMQPOptions> amqpOptions, IOrderRepository productRepository)
+        public AMQPEventEmitter(IOptions<AMQPOptions> amqpOptions)
         {
             _rabbitOptions = amqpOptions.Value;
 

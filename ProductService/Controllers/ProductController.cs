@@ -67,5 +67,12 @@ namespace ProductService.Controllers
             _productRepository.DeleteProduct(id);
             return new OkResult();
         }
+
+        [HttpDelete]
+        public IActionResult DeleteAll(int id)
+        {
+            _productRepository.DeleteProduct(id);
+            return new OkResult();
+        }
     }
 }
