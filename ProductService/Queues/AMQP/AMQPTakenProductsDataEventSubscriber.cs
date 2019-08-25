@@ -5,6 +5,7 @@ using ProductService.Queues.Interfaces;
 using ProductService.Repository;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using System.Collections.Generic;
 using System.Text;
 
 namespace ProductService.Queues.AMQP
@@ -43,10 +44,13 @@ namespace ProductService.Queues.AMQP
             {
                 var body = ea.Body;
                 var msg = Encoding.UTF8.GetString(body);
-                te productDetails = JsonConvert.DeserializeObject<te>(msg);
-                productDetails.ProductsDetails[0].ProductAmount -= (2* productDetails.ProductsDetails[0].ProductAmount); 
-                productRepository.UpdateProductsAmount(productDetails.ProductsDetails[0]);
-
+                IEnumerable<ProductDetails> productsDetails = JsonConvert.DeserializeObject<ProductsResourcesData>(msg).ProductsDetails;
+                foreach (var product in productsDetails)
+                {
+                    product.ProductAmount -= 2*(product.ProductAmount);
+                    productRepository.UpdateProductsAmount(product);
+                }
+                
                 channel.BasicAck(ea.DeliveryTag, false);
             };
         }

@@ -40,7 +40,10 @@ namespace ProductService.Repository
         public void UpdateProductsAmount(ProductDetails productDetails)
         {
             Product product = GetProductByID(productDetails.ProductId);
+
+            if (product == null) return;
             product.Amount += productDetails.ProductAmount;
+
             SaveChanges();
         }
 
