@@ -43,7 +43,6 @@ namespace ProductService
             services.AddDbContext<ProductContext>(o => o.UseSqlServer(Configuration.GetConnectionString("ProductDB")));
             services.AddScoped<IProductContext>(provider => (IProductContext)provider.GetService(typeof(ProductContext)));
 
-            services.AddTransient(typeof(IProductContext), typeof(ProductContext));
             services.AddTransient(typeof(IConnectionFactory), typeof(AMQPConnectionFactory));
             services.AddTransient(typeof(EventingBasicConsumer), typeof(AMQPEventingConsumer));
 
@@ -68,7 +67,7 @@ namespace ProductService
                 app.UseHsts();
             }
 
-            app.UseHttpsRedirection();
+
             app.UseMvc();
 
             releasedProductsDataEventProcessor.Start();

@@ -18,8 +18,7 @@ namespace OrderService.Controllers
             _orderRepository = orderRepository;
         }
 
-        [HttpGet]
-        //[Route("api/[controller]/GetAllOrders")]
+        [HttpGet("GetAllOrders")]
         public IActionResult GetAllOrders(int userId)
         {
             var orders = _orderRepository.GetOrdersByUserID(userId);
@@ -27,7 +26,7 @@ namespace OrderService.Controllers
             return new OkObjectResult(orders);
         }
 
-        [HttpPost]
+        [HttpPost("CreateNewOrder")]
         public IActionResult CreateNewOrder([FromBody] Order order)
         {
             using (var scope = new TransactionScope())
@@ -38,18 +37,18 @@ namespace OrderService.Controllers
             }
         }
 
-        [HttpPut]
-        public IActionResult UpdateOrdersStatus([FromBody] int orderId, int orderStatusCode)
+        [HttpPut("UpdateOrdersStatus")]
+        public IActionResult UpdateOrdersStatus(OrderStatusModel orderStatus)
         {
             using (var scope = new TransactionScope())
             {
-                _orderRepository.UpdateOrder(orderId, orderStatusCode);
+                _orderRepository.UpdateOrder(orderStatus.Id, orderStatus.StatusCode);
                 scope.Complete();
                 return Ok();
             }
         }
 
-        [HttpDelete]
+        [HttpDelete("DeleteOrder")]
         public IActionResult DeleteOrder(int orderId)
         {
             int statusCode = _orderRepository.DeleteOrder(orderId);            

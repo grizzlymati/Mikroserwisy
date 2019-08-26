@@ -44,13 +44,15 @@ namespace ProductService.Queues.AMQP
             {
                 var body = ea.Body;
                 var msg = Encoding.UTF8.GetString(body);
-                IEnumerable<ProductDetails> productsDetails = JsonConvert.DeserializeObject<ProductsResourcesData>(msg).ProductsDetails;
-                foreach (var product in productsDetails)
+                if (msg != null && msg != "null")
                 {
-                    product.ProductAmount -= 2*(product.ProductAmount);
-                    productRepository.UpdateProductsAmount(product);
+                    IEnumerable<ProductDetails> productsDetails = JsonConvert.DeserializeObject<ProductsResourcesData>(msg).ProductsDetails;
+                    foreach (var product in productsDetails)
+                    {
+                        product.ProductAmount -= 2 * (product.ProductAmount);
+                        productRepository.UpdateProductsAmount(product);
+                    }
                 }
-                
                 channel.BasicAck(ea.DeliveryTag, false);
             };
         }
