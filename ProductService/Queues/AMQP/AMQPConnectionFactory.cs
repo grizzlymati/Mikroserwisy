@@ -11,13 +11,13 @@ namespace ProductService.Queues.AMQP
 
         public AMQPConnectionFactory(IOptions<AMQPOptions> serviceOptions) : base()
         {
-            this.amqpOptions = serviceOptions.Value;
+            amqpOptions = serviceOptions.Value;
 
-            this.UserName = amqpOptions.Username;
-            this.Password = amqpOptions.Password;
-            this.VirtualHost = amqpOptions.VirtualHost;
-            this.HostName = amqpOptions.HostName;
-            this.Uri = new Uri(amqpOptions.Uri);
+            UserName = amqpOptions.Username;
+            Password = amqpOptions.Password;
+            VirtualHost = amqpOptions.VirtualHost;
+            HostName = amqpOptions.HostName;
+            Uri = new Uri(amqpOptions.Uri);
         }
     }
 }

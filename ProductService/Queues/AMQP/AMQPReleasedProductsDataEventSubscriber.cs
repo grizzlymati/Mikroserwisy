@@ -12,35 +12,34 @@ namespace ProductService.Queues.AMQP
 {
     public class AMQPReleasedProductsDataEventSubscriber : IReleasedProductsDataEventSubscriber
     {
-        private EventingBasicConsumer consumer;
-        private QueueOptions queueOptions;
-        private string consumerTag;
-        private IModel channel;
-        private IProductRepository productRepository;
+        private EventingBasicConsumer _consumer;
+        private QueueOptions _queueOptions;
+        private string _consumerTag;
+        private IModel _channel;
+        private IProductRepository _productRepository;
 
         public AMQPReleasedProductsDataEventSubscriber(IOptions<QueueOptions> queueOptions,
             EventingBasicConsumer consumer, IProductRepository productRepository)
         {
-            this.queueOptions = queueOptions.Value;
-            this.consumer = consumer;
-
-            this.channel = consumer.Model;
-            this.productRepository = productRepository;
+            _queueOptions = queueOptions.Value;
+            _consumer = consumer;
+            _channel = consumer.Model;
+            _productRepository = productRepository;
 
             Initialize();
         }
 
         private void Initialize()
         {
-            channel.QueueDeclare(
-                queue: queueOptions.ReleasedProductsDataEventQueueName,
+            _channel.QueueDeclare(
+                queue: _queueOptions.ReleasedProductsDataEventQueueName,
                 durable: false,
                 exclusive: false,
                 autoDelete: false,
                 arguments: null
             );
 
-            consumer.Received += (ch, ea) =>
+            _consumer.Received += (ch, ea) =>
             {
                 var body = ea.Body;
                 string msg = Encoding.UTF8.GetString(body);
@@ -49,21 +48,21 @@ namespace ProductService.Queues.AMQP
                     IEnumerable<ProductDetails> productsDetails = JsonConvert.DeserializeObject<ProductsResourcesData>(msg).ProductsDetails;
                     foreach (var product in productsDetails)
                     {
-                        productRepository.UpdateProductsAmount(product);
+                        _productRepository.UpdateProductsAmount(product);
                     }
                 }
-                channel.BasicAck(ea.DeliveryTag, false);
+                _channel.BasicAck(ea.DeliveryTag, false);
             };
         }
 
         public void Subscribe()
         {
-            consumerTag = channel.BasicConsume(queueOptions.ReleasedProductsDataEventQueueName, false, consumer);
+            _consumerTag = _channel.BasicConsume(_queueOptions.ReleasedProductsDataEventQueueName, false, _consumer);
         }
 
         public void Unsubscribe()
         {
-            channel.BasicCancel(consumerTag);
+            _channel.BasicCancel(_consumerTag);
         }
     }
 }

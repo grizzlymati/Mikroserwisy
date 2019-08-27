@@ -5,21 +5,21 @@ namespace ProductService.Events
 {
     public class TakenProductsDataEventProcessor : ITakenProductsDataEventProcessor
     {
-        private ITakenProductsDataEventSubscriber subscriber;
+        private ITakenProductsDataEventSubscriber _subscriber;
 
         public TakenProductsDataEventProcessor(ITakenProductsDataEventSubscriber takenProductsDataEventSubscriber)
         {
-            this.subscriber = takenProductsDataEventSubscriber;
+            _subscriber = takenProductsDataEventSubscriber;
         }
 
         public void Start()
         {
-            this.subscriber.Subscribe();
+            _subscriber.Subscribe();
         }
 
         public void Stop()
         {
-            this.subscriber.Unsubscribe();
+            _subscriber.Unsubscribe();
         }
     }
 }

@@ -10,7 +10,7 @@ namespace OrderService.Controllers
     public class OrderController : ControllerBase
     {
 
-        private readonly IOrderRepository _orderRepository;
+        private IOrderRepository _orderRepository;
         
 
         public OrderController(IOrderRepository orderRepository)

@@ -5,21 +5,21 @@ namespace ProductService.Events
 {
     public class ReleasedProductsDataEventProcessor : IReleasedProductsDataEventProcessor
     {
-        private IReleasedProductsDataEventSubscriber subscriber;
+        private IReleasedProductsDataEventSubscriber _subscriber;
 
         public ReleasedProductsDataEventProcessor(IReleasedProductsDataEventSubscriber eventSubscriber)
         {
-            this.subscriber = eventSubscriber;
+            _subscriber = eventSubscriber;
         }
 
         public void Start()
         {
-            this.subscriber.Subscribe();
+            _subscriber.Subscribe();
         }
 
         public void Stop()
         {
-            this.subscriber.Unsubscribe();
+            _subscriber.Unsubscribe();
         }
     }
 }
