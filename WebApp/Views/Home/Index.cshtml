@@ -1,0 +1,36 @@
+﻿<html>
+<head>
+    <title>M.Lis</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <script src="/js/site.js"></script>
+    <link href="~/css/site.css" rel="stylesheet">
+
+</head>
+<body>
+
+    @using WebApp.Models;
+    @model AuthModel
+
+    @Html.AntiForgeryToken()
+
+    @using (Html.BeginForm("Login", "Home"))
+    {
+        <div class="wrapper fadeInDown">
+            <div id="formContent">
+                <div>
+                    @Html.TextBoxFor(x => x.Login, new { placeholder = "login" })
+                </div>
+                <div>
+                    @Html.TextBoxFor(x => x.Password, new { placeholder = "hasło", type = "password" })
+                </div>
+
+                <input type="submit" class="fadeIn fourth" value="Zaloguj" />
+            </div>
+        </div>
+     }
+
+</body>
+</html>
