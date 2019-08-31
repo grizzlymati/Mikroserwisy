@@ -1,0 +1,89 @@
+﻿<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://unpkg.com/bootstrap-table@1.15.4/dist/bootstrap-table.min.js"></script>
+
+
+<table  data-unique-id="id" class="display table table table-dark table-striped" id="productsTable">
+    <thead>
+        <tr>
+            <th data-field="name">Name</th>
+            <th data-field="description">Description</th>
+            <th data-field="price">Price</th>
+            <th data-field="amount">Amount left</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+<div style="text-align:center;" class="row"> 
+    <button onClick="sendOrder()" class="btn btn-primary">Order!</button>
+</div>
+
+<script type="text/javascript">
+    var selectedObjects = [];
+
+    $(document).ready(function () {
+        $.ajax({
+        url: '@Url.Action("GetAllProducts", "Home")',
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function(responseData) {
+           $('#productsTable').bootstrapTable({
+              data: responseData,
+              columns: [ {},{},{},{},  
+                {
+                  field: 'operate',
+                  title: 'Selected amount',
+                  align: 'center',
+                  valign: 'middle',
+                  clickToSelect: false,
+                  formatter : function(value,row,index) {
+                    return '<span style=\'margin-right:10px\' id="'+row.id+'">0</span> <button onClick=\'Test("'+row.id+'",0)\' class=\'btn btn-primary \' pageName="'+row.id+'" pageDetails="'+row.price+'"  >+</button> <button onClick=\'Test("'+row.id+'",1)\'  class=\'btn btn-primary \' pageName="'+row.id+'" pageDetails="'+row.price+'"  >-</button>';
+                  }
+                }]
+           });
+           $("#productsTable").bootstrapTable("hideLoading");
+        },
+        error: function(){
+           alert("Błąd wczytania danych!")
+        }
+        })
+    });
+
+    function Test(id, type){
+        let $table = $('#productsTable');
+        let number = parseInt($("#" +  id).text(),10);
+        let productAmount = $table.bootstrapTable('getRowByUniqueId', id).amount;
+       
+        if(type === 0 && productAmount > 0) {
+            productAmount -= 1;
+            number += 1;
+        }
+        else if(type === 1 && number > 0){ 
+            productAmount += 1;
+            number -= 1;
+        }
+
+        let selectedObject = this.selectedObjects.find(x=>x.Id === id);
+        if (selectedObject) selectedObject.Amount = number;
+        else this.selectedObjects.push({Id:id, Amount : number});
+
+        $table.bootstrapTable('updateCellByUniqueId', {
+        id: id,
+        field: 'amount',
+        value: productAmount
+        })
+
+        this.selectedObjects.forEach(element => {
+            $("#" + element.Id).text(element.Amount);
+        });
+    }
+
+    function sendOrder(){        
+        $.post({
+        url: '@Url.Action("SendOrder", "Home")',
+        dataType: 'json',
+        data: {'orderData':this.selectedObjects}
+    });
+    }
+
+</script>
