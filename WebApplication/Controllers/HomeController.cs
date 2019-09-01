@@ -46,5 +46,15 @@ namespace WebApplication.Controllers
         {
             return Ok();
         }
+
+        public IActionResult DeleteProduct(int id)
+        {
+            return Ok();
+        }
+
+        public IActionResult CreateProduct(Product product)
+        {
+            return Ok();
+        }
     }
 }

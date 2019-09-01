@@ -2,6 +2,31 @@
 <script src="https://unpkg.com/bootstrap-table@1.15.4/dist/bootstrap-table.min.js"></script>
 
 
+<div style="position:absolute;text-align:center;display:none;" id="modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h4 class="modal-title">Product creator</h4>
+        </div>
+        <div class="modal-body" style="width:350px !important; display:inline-block">
+            <form id="newProductForm">
+                
+                    <input style="width:250px;margin:5px" type="text" class="form-control" id="InputName" aria-describedby="Name" placeholder="Name">
+                    <input style="width:250px;margin:5px" type="text" class="form-control" id="InputDescription" aria-describedby="Description" placeholder="Description">
+                    <input style="width:250px;margin:5px;display:inline-block;text-align:center" type="text" pattern="\d+" class="form-control" id="InputPrice" aria-describedby="Price" placeholder="Price">
+                    <input style="width:250px;margin:5px;display:inline-block;text-align:center" type="text" onkeypress="return (event.charCode == 8 || event.charCode == 0 || event.charCode == 13) ? null : event.charCode >= 48 && event.charCode <= 57"  class="form-control" id="InputAvailableAmount" aria-describedby="AvailableAmount" placeholder="Available amount">
+                
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-danger" onClick="saveProduct()">Save changes</button>
+            <button type="button" class="btn btn-danger" onClick="cancelModal()">Close</button>
+        </div>
+        </div>
+    </div>
+</div>
+
+<div id="productPage">
 <table  data-unique-id="id" class="display table table table-dark table-striped" id="productsTable">
     <thead>
         <tr>
@@ -14,12 +39,19 @@
     <tbody>
     </tbody>
 </table>
-<div style="text-align:center;" class="row"> 
+<div style="text-align:center" class="row"> 
     <button onClick="sendOrder()" class="btn btn-primary">Order!</button>
+    <button style ="background-color:green;border-color:green" onClick="addProduct()" class="btn btn-primary" >Add product</button>
+    <button style ="background-color:red;border-color:red" onClick="saveChanges()" class="btn btn-primary">Save changes</button>
 </div>
+<div>
 
 <script type="text/javascript">
     var selectedObjects = [];
+    var rowsToDelete = [];
+    var rowsToAdd = [];
+    var counter = 1000;
+    var $table = $('#productsTable');
 
     $(document).ready(function () {
         $.ajax({
@@ -37,7 +69,21 @@
                   valign: 'middle',
                   clickToSelect: false,
                   formatter : function(value,row,index) {
-                    return '<span style=\'margin-right:10px\' id="'+row.id+'">0</span> <button onClick=\'Test("'+row.id+'",0)\' class=\'btn btn-primary \' pageName="'+row.id+'" pageDetails="'+row.price+'"  >+</button> <button onClick=\'Test("'+row.id+'",1)\'  class=\'btn btn-primary \' pageName="'+row.id+'" pageDetails="'+row.price+'"  >-</button>';
+                    let valueString = '<span style=\'margin-right:10px\' id="'+row.id+'">0</span> ';
+                    valueString += '<button onClick=\'Test("'+row.id+'",0)\' class=\'btn btn-primary \' pageName="'+row.id+'" pageDetails="'+row.price+'"  >+</button> ';
+                    valueString += '<button onClick=\'Test("'+row.id+'",1)\'  class=\'btn btn-primary \' pageName="'+row.id+'" pageDetails="'+row.price+'" >-</button> ';
+                    return valueString;
+                  }
+                },
+                {
+                  field: 'operate',
+                  title: 'Actions',
+                  align: 'center',
+                  valign: 'middle',
+                  clickToSelect: false,
+                  formatter : function(value,row,index) {
+                    let valueString = '<button style=\'background-color:red;border-color:red\' onClick=\'deleteProduct("'+row.id+'")\'  class=\'btn btn-primary \' pageName="'+row.id+'" pageDetails="'+row.price+'" >Delete</button>';
+                    return valueString;
                   }
                 }]
            });
@@ -50,7 +96,6 @@
     });
 
     function Test(id, type){
-        let $table = $('#productsTable');
         let number = parseInt($("#" +  id).text(),10);
         let productAmount = $table.bootstrapTable('getRowByUniqueId', id).amount;
        
@@ -83,7 +128,71 @@
         url: '@Url.Action("SendOrder", "Home")',
         dataType: 'json',
         data: {'orderData':this.selectedObjects}
-    });
+        });
+    }
+
+    function deleteProduct(id){
+        this.rowsToDelete.push(id);
+        $table.bootstrapTable('removeByUniqueId', id);
+    }
+
+    function addProduct(){
+         var modal = document.getElementById("modal");
+         var productPage = document.getElementById("productPage");
+         productPage.style.pointerEvents = "none";
+         modal.style.display = "contents";
+    }
+
+    function saveProduct(){
+        let newProduct = {};
+        $table.bootstrapTable('insertRow', {
+        index:counter,
+        row: {
+          id: counter,
+          name: $('#InputName').val(),
+          description: $('#InputDescription').val(),
+          price: $('#InputPrice').val(),
+          amount: $('#InputAvailableAmount').val()
+        }
+        })
+        this.rowsToAdd.push(counter);
+        counter--;
+        this.refreshForm();
+        this.cancelModal();
+    }
+
+    function cancelModal(){
+        var modal = document.getElementById("modal");
+         modal.style.display = "none";
+         productPage.style.pointerEvents = "initial";
+         this.refreshForm();
+    }
+
+    function saveChanges(){
+        this.rowsToDelete.forEach(objId => {
+            var url = '@Url.Action("DeleteProduct","Home")' + '?id=' +objId;
+            $.ajax({
+                url: url,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+            })
+        });
+
+        this.rowsToAdd.forEach(id => {
+            let objToAdd = $table.bootstrapTable('getRowByUniqueId', id);
+            $.post({
+                url: '@Url.Action("CreateProduct", "Home")',
+                dataType: 'json',
+                data: {'product': objToAdd}
+            });
+        });
+    }
+
+    function refreshForm(){
+        $('#InputName').val('');
+        $('#InputDescription').val('');
+        $('#InputPrice').val('');
+        $('#InputAvailableAmount').val('');
     }
 
 </script>
