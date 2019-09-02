@@ -1,9 +1,12 @@
-﻿<nav class="navbar navbar-inverse navbar-fixed-top">
+﻿@model AuthModel
+
+<nav class="navbar navbar-inverse navbar-fixed-top">
     <div class="container">
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
-                <li><a onclick="switchPage(0,1)">Products</a></li>
-                <li><a onclick="switchPage(1,0)">Orders</a></li>
+                <li><a style="text-decoration: underline">User: @Model.Login</a></li>
+                <li><a onclick="switchPage('productsPartial','ordersPartial')">Products</a></li>
+                <li><a onclick="switchPage('ordersPartial','productsPartial')">Orders</a></li>
                 <li><a href="~/Home/Login">Logout</a></li>
             </ul>
         </div>
@@ -11,11 +14,11 @@
 </nav>
 
 <div class="container body-content" style="padding-top:50px">
-    <div id="0">
-        <partial name="Products" />
-    </div>
-    <div id="1" style="display:none">
+    <div id="ordersPartial" style="display:none">
         <partial name="Orders" />
+    </div>
+    <div id="productsPartial">
+        <partial name="Products" />
     </div>
 </div>
 

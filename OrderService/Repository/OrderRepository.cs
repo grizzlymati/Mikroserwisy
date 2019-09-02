@@ -31,7 +31,7 @@ namespace OrderService.Repository
             Order order = _dbContext.Orders.Find(orderId);
             if (CanDeleteOrder(order.StatusCode))
             {
-                ReleasedProductsDataEvent releasedProductsDataEvent = _converter.CommandToEvent(order.OrdersData) as ReleasedProductsDataEvent;
+                ReleasedProductsDataEvent releasedProductsDataEvent = new ReleasedProductsDataEvent() { ProductsDetails = _converter.CommandToEvent(order.OrdersData) };
                 _eventEmitter.EmitReleasedProductsDataEvent(releasedProductsDataEvent);
 
                 _dbContext.Orders.Remove(order);
@@ -48,7 +48,7 @@ namespace OrderService.Repository
         public void InsertOrder(Order order)
         {
             _dbContext.Orders.Add(order);
-            TakenProductsDataEvent takenProductsDataEvent = _converter.CommandToEvent(order.OrdersData) as TakenProductsDataEvent;
+            TakenProductsDataEvent takenProductsDataEvent = new TakenProductsDataEvent() { ProductsDetails = _converter.CommandToEvent(order.OrdersData) };
             _eventEmitter.EmitTakenProductsDataEvent(takenProductsDataEvent);
 
             SaveChanges();

@@ -41,7 +41,7 @@ namespace ProductService
             services.Configure<QueueOptions>(Configuration.GetSection("QueueOptions"));
             services.Configure<AMQPOptions>(Configuration.GetSection("amqp"));
             services.AddDbContext<ProductContext>(o => o.UseSqlServer(Configuration.GetConnectionString("ProductDB")));
-            services.AddScoped<IProductContext>(provider => (IProductContext)provider.GetService(typeof(ProductContext)));
+            services.AddSingleton<IProductContext>(provider => (IProductContext)provider.GetService(typeof(ProductContext)));
 
             services.AddTransient(typeof(IConnectionFactory), typeof(AMQPConnectionFactory));
             services.AddTransient(typeof(EventingBasicConsumer), typeof(AMQPEventingConsumer));

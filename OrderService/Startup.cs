@@ -35,7 +35,7 @@ namespace OrderService
             services.Configure<AMQPOptions>(Configuration.GetSection("amqp"));
             services.AddSingleton(typeof(IEventEmitter), typeof(AMQPEventEmitter));
             services.AddDbContext<OrderContext>(o => o.UseSqlServer(Configuration.GetConnectionString("OrderDB")));
-            services.AddScoped<IOrderContext>(provider => (IOrderContext)provider.GetService(typeof(OrderContext)));
+            services.AddSingleton<IOrderContext>(provider => (IOrderContext)provider.GetService(typeof(OrderContext)));
             services.AddTransient(typeof(IOrderRepository), typeof(OrderRepository));
             services.AddSingleton(typeof(ICommandEventConverter), typeof(CommandEventConverter));
 

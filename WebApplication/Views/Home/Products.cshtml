@@ -1,7 +1,6 @@
 ﻿<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <script src="https://unpkg.com/bootstrap-table@1.15.4/dist/bootstrap-table.min.js"></script>
 
-
 <div style="position:absolute;text-align:center;display:none;" id="modal">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -10,11 +9,10 @@
         </div>
         <div class="modal-body" style="width:350px !important; display:inline-block">
             <form id="newProductForm">
-                
-                    <input style="width:250px;margin:5px" type="text" class="form-control" id="InputName" aria-describedby="Name" placeholder="Name">
-                    <input style="width:250px;margin:5px" type="text" class="form-control" id="InputDescription" aria-describedby="Description" placeholder="Description">
-                    <input style="width:250px;margin:5px;display:inline-block;text-align:center" type="text" pattern="\d+" class="form-control" id="InputPrice" aria-describedby="Price" placeholder="Price">
-                    <input style="width:250px;margin:5px;display:inline-block;text-align:center" type="text" onkeypress="return (event.charCode == 8 || event.charCode == 0 || event.charCode == 13) ? null : event.charCode >= 48 && event.charCode <= 57"  class="form-control" id="InputAvailableAmount" aria-describedby="AvailableAmount" placeholder="Available amount">
+                <input style="width:250px;margin:5px" type="text" class="form-control" id="InputName" aria-describedby="Name" placeholder="Name">
+                <input style="width:250px;margin:5px" type="text" class="form-control" id="InputDescription" aria-describedby="Description" placeholder="Description">
+                <input style="width:250px;margin:5px;display:inline-block;text-align:center" type="text" pattern="\d+" class="form-control" id="InputPrice" aria-describedby="Price" placeholder="Price">
+                <input style="width:250px;margin:5px;display:inline-block;text-align:center" type="text" onkeypress="return (event.charCode == 8 || event.charCode == 0 || event.charCode == 13) ? null : event.charCode >= 48 && event.charCode <= 57"  class="form-control" id="InputAvailableAmount" aria-describedby="AvailableAmount" placeholder="Available amount">
                 
             </form>
         </div>
@@ -40,11 +38,14 @@
     </tbody>
 </table>
 <div style="text-align:center" class="row"> 
-    <button onClick="sendOrder()" class="btn btn-primary">Order!</button>
-    <button style ="background-color:green;border-color:green" onClick="addProduct()" class="btn btn-primary" >Add product</button>
-    <button style ="background-color:red;border-color:red" onClick="saveChanges()" class="btn btn-primary">Save changes</button>
+    @if(@Model.Login == "Admin"){
+        <button style ="background-color:green;border-color:green" onClick="addProduct()" class="btn btn-primary" >Add product</button>
+        <button style ="background-color:red;border-color:red" onClick="saveChanges()" class="btn btn-primary">Save changes</button>
+    }else{
+        <button onClick="sendOrder()" class="btn btn-primary">Order!</button>
+    }
 </div>
-<div>
+</div>
 
 <script type="text/javascript">
     var selectedObjects = [];
@@ -54,28 +55,22 @@
     var $table = $('#productsTable');
 
     $(document).ready(function () {
-        $.ajax({
-        url: '@Url.Action("GetAllProducts", "Home")',
-        contentType: "application/json; charset=utf-8",
-        dataType: "json",
-        success: function(responseData) {
-           $('#productsTable').bootstrapTable({
-              data: responseData,
-              columns: [ {},{},{},{},  
-                {
+        var applyColumn;
+        var amountSelectColumn = {
                   field: 'operate',
                   title: 'Selected amount',
                   align: 'center',
                   valign: 'middle',
                   clickToSelect: false,
                   formatter : function(value,row,index) {
-                    let valueString = '<span style=\'margin-right:10px\' id="'+row.id+'">0</span> ';
-                    valueString += '<button onClick=\'Test("'+row.id+'",0)\' class=\'btn btn-primary \' pageName="'+row.id+'" pageDetails="'+row.price+'"  >+</button> ';
-                    valueString += '<button onClick=\'Test("'+row.id+'",1)\'  class=\'btn btn-primary \' pageName="'+row.id+'" pageDetails="'+row.price+'" >-</button> ';
+                    let valueString = '<span class=\'displayForUser\' style=\'margin-right:10px\' id="'+row.id+'">0</span> ';
+                    valueString += '<button onClick=\'changeAmount("'+row.id+'",0)\' class=\'btn btn-primary  \' pageName="'+row.id+'" pageDetails="'+row.price+'"  >+</button> ';
+                    valueString += '<button onClick=\'changeAmount("'+row.id+'",1)\'  class=\'btn btn-primary  \' pageName="'+row.id+'" pageDetails="'+row.price+'" >-</button> ';
                     return valueString;
                   }
-                },
-                {
+                };
+        
+        var actionColumn = {
                   field: 'operate',
                   title: 'Actions',
                   align: 'center',
@@ -85,19 +80,33 @@
                     let valueString = '<button style=\'background-color:red;border-color:red\' onClick=\'deleteProduct("'+row.id+'")\'  class=\'btn btn-primary \' pageName="'+row.id+'" pageDetails="'+row.price+'" >Delete</button>';
                     return valueString;
                   }
-                }]
+                };
+        if("@Model.Login" == "Admin"){
+            applyColumn = actionColumn;
+        }else {
+            applyColumn = amountSelectColumn;
+        }
+
+        $.ajax({
+        url: '@Url.Action("GetAllProducts", "Home")',
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function(responseData) {
+           $('#productsTable').bootstrapTable({
+              data: responseData,
+              columns: [ {},{},{},{}, applyColumn]
            });
            $("#productsTable").bootstrapTable("hideLoading");
         },
         error: function(){
            alert("Błąd wczytania danych!")
         }
-        })
-    });
-
-    function Test(id, type){
+        });
+})
+    function changeAmount(id, type){
         let number = parseInt($("#" +  id).text(),10);
         let productAmount = $table.bootstrapTable('getRowByUniqueId', id).amount;
+        let name = $table.bootstrapTable('getRowByUniqueId', id).name;
        
         if(type === 0 && productAmount > 0) {
             productAmount -= 1;
@@ -108,10 +117,10 @@
             number -= 1;
         }
 
-        let selectedObject = this.selectedObjects.find(x=>x.Id === id);
-        if (selectedObject) selectedObject.Amount = number;
-        else this.selectedObjects.push({Id:id, Amount : number});
-
+        let selectedObject = this.selectedObjects.find(x=>x.ProductId === id);
+        if (selectedObject) selectedObject.ProductAmount = number;
+        else this.selectedObjects.push({ProductId:id, ProductAmount : number, ProductName: name});
+    
         $table.bootstrapTable('updateCellByUniqueId', {
         id: id,
         field: 'amount',
@@ -119,15 +128,22 @@
         })
 
         this.selectedObjects.forEach(element => {
-            $("#" + element.Id).text(element.Amount);
+            $("#" + element.ProductId).text(element.ProductAmount);
         });
     }
 
-    function sendOrder(){        
+    function sendOrder(){       
+        var self = this; 
         $.post({
         url: '@Url.Action("SendOrder", "Home")',
-        dataType: 'json',
-        data: {'orderData':this.selectedObjects}
+        data: {'orderData':this.selectedObjects},
+        success: function(){
+           window.location.reload(true);
+           alert("Ordered!")
+        },
+        error: function(){
+            alert('Something went wrong!');
+        }
         });
     }
 
@@ -180,12 +196,18 @@
 
         this.rowsToAdd.forEach(id => {
             let objToAdd = $table.bootstrapTable('getRowByUniqueId', id);
-            $.post({
-                url: '@Url.Action("CreateProduct", "Home")',
-                dataType: 'json',
-                data: {'product': objToAdd}
+                    $.post({
+                    url: '@Url.Action("CreateProduct", "Home")',
+                    data: {'product':objToAdd},
+                    success: function(){
+                    },
+                    error: function(){
+                        alert('Something went wrong!');
+                    }
             });
-        });
+           });
+        
+        window.location.reload(true);
     }
 
     function refreshForm(){

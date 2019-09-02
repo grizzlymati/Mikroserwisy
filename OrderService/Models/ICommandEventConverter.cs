@@ -1,9 +1,10 @@
-﻿using OrderService.Events.Interfaces;
+﻿using OrderService.Events;
+using System.Collections.Generic;
 
 namespace OrderService.Models
 {
     public interface ICommandEventConverter
     {
-        IProductsResourcesData CommandToEvent(string productsDetails);
+        IList<ProductDetails> CommandToEvent(string productsDetails);
     }
 }

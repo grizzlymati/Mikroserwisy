@@ -1,11 +1,23 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Net;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using WebApplication.Models;
+using WebApplication.Services;
 
 namespace WebApplication.Controllers
 {
     public class HomeController : Controller
     {
+        private IProductServiceClient _productServiceClient;
+        private IOrderServiceClient _orderServiceClient;
+
+        public HomeController(IProductServiceClient productServiceClient, IOrderServiceClient orderServiceClient)
+        {
+            _productServiceClient = productServiceClient;
+            _orderServiceClient = orderServiceClient;
+        }
+
         public IActionResult Login()
         {
             return View();
@@ -14,47 +26,68 @@ namespace WebApplication.Controllers
         public IActionResult UserPanel(AuthModel authModel)
         {
             string userData = authModel.GetHashCode().ToString();
-            //return RedirectToAction(nameof(ProductsController.Index), "Products", new { id = userData });
-            return View();
+            if(authModel.Login == "Admin" && authModel.Password == "Admin")
+            {
+                return View(authModel);
+            }
+            else if (authModel.Login == "User1" && authModel.Password == "User1")
+            {
+                return View(authModel);
+            }
+            else if(authModel.Login == "User2" && authModel.Password == "User2")
+            {
+                return View(authModel);
+            }
+            else
+            {
+                return RedirectToAction(nameof(HomeController.Login), "Home");
+            }
         }
 
         public JsonResult GetAllProducts()
         {
-            List<Product> products = new List<Product>()
-            {
-                new Product()
-                {
-                    Id = 14,
-                    Name = "Test1",
-                    Description = "DescTest1",
-                    Price = 2.1M,
-                    Amount = 4
-                },
-                   new Product()
-                {
-                    Id = 11,
-                    Name = "Test12",
-                    Description = "DescTest21",
-                    Price = 2.11M,
-                    Amount = 5
-                }
-            };
+            var products = _productServiceClient.GetAllProducts();
             return new JsonResult(products);
         }
 
         public IActionResult SendOrder(ProductOrderDetails[] orderData)
         {
-            return Ok();
+            Order newOrder = new Order();
+            newOrder.OrdersData = JsonConvert.SerializeObject(orderData);
+            newOrder.OrderDate = DateTime.Now;
+            newOrder.UserId = 0;
+            newOrder.StatusCode = 0;
+
+            HttpStatusCode statusCode = _orderServiceClient.CreateNewOrder(newOrder);
+            if (statusCode.ToString() == "OK") return Ok();
+            return Conflict();
         }
 
         public IActionResult DeleteProduct(int id)
         {
-            return Ok();
+            HttpStatusCode statusCode = _productServiceClient.DeleteProduct(id);
+            if (statusCode.ToString() == "OK") return Ok();
+            return Conflict();
         }
 
         public IActionResult CreateProduct(Product product)
         {
-            return Ok();
+            HttpStatusCode statusCode = _productServiceClient.CreateProduct(product);
+            if (statusCode.ToString() == "OK") return Ok();
+            return Conflict();
+        }
+
+        public JsonResult GetAllOrders()
+        {
+            var products = _orderServiceClient.GetAllOrders(-1);
+            return new JsonResult(products);
+        }
+
+        public IActionResult DeleteOrder(int id)
+        {
+            HttpStatusCode statusCode = _orderServiceClient.DeleteOrder(id);
+            if (statusCode.ToString() == "OK") return Ok();
+            return Conflict();
         }
     }
 }

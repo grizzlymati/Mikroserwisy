@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using WebApplication.Models;
+using WebApplication.Services;
 
 namespace WebApplication
 {
@@ -29,8 +31,10 @@ namespace WebApplication
                 options.CheckConsentNeeded = context => true;
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
-
-
+            services.Configure<ProductServiceOptions>(Configuration.GetSection("productservice"));
+            services.Configure<OrderServiceOptions>(Configuration.GetSection("orderservice"));
+            services.AddSingleton(typeof(IOrderServiceClient), typeof(HttpOrderServiceClient));
+            services.AddSingleton(typeof(IProductServiceClient), typeof(HttpProductServiceClient));
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 

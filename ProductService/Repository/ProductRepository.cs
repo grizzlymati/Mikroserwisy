@@ -11,7 +11,7 @@ namespace ProductService.Repository
 
         public ProductRepository(IProductContext productContext)
         {
-                _dbContext = productContext;
+            _dbContext = productContext;
         }
 
         public void DeleteProduct(int productId)
@@ -23,7 +23,7 @@ namespace ProductService.Repository
 
         public Product GetProductByID(int productId)
         {
-            return _dbContext.Products.Find(productId);
+            return _dbContext.Products.FirstOrDefault(x => x.Id == productId);
         }
 
         public IEnumerable<Product> GetProducts()
@@ -33,6 +33,7 @@ namespace ProductService.Repository
 
         public void InsertProduct(Product product)
         {
+            product.Id = 0;
             _dbContext.Products.Add(product);
             SaveChanges();
         }

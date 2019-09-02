@@ -1,7 +1,76 @@
-﻿@{
-    ViewData["Title"] = "About";
-}
-<h2>@ViewData["Title"]</h2>
-<h3>@ViewData["Message"]</h3>
+﻿<table data-unique-id="id" class="display table table table-dark table-striped" id="ordersTable">
+    <thead>
+        <tr>
+            <th data-field="userId">User id</th>
+            <th data-field="statusCode">Status code</th>
+            <th data-field="orderDate">Order date</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
 
-<p>Use this area to provide additional information.</p>
+<script type="text/javascript">
+    var $ordersTable = $('#ordersTable');
+  
+$(document).ready(function () {
+        var columnToApply =
+                {
+                  field: 'operate',
+                  title: 'Actions',
+                  align: 'center',
+                  valign: 'middle',
+                  clickToSelect: false,
+                  formatter : function(value,row,index) {
+                    let valueString = '<button style=\'background-color:red;border-color:red\' onClick=\'deleteOrder("'+row.id+'",0)\' class=\'btn btn-primary \' pageName="'+row.id+'" pageDetails="'+row.price+'"  >Delete</button> ';
+                    return valueString;
+                  }
+        };
+        
+           if("@Model.Login" == "Admin"){
+            columnToApply = columnToApply;
+           }else {
+               columnToApply = undefined;
+           }
+debugger;
+        $.ajax({
+        url: '@Url.Action("GetAllOrders", "Home")',
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function(responseData) {
+           $('#ordersTable').bootstrapTable({
+              data: responseData,
+              columns: [ {},{},{},{
+                  field: 'operate',
+                  title: 'Ordered products',
+                  align: 'center',
+                  valign: 'middle',
+                  clickToSelect: false,
+                  formatter : function(value,row,index) {
+                      let productsData = JSON.parse(row.ordersData);
+                      let result = '';
+                      if (productsData.length !== undefined) {
+                          productsData.forEach(element => {
+                              result += '<div>' + element.ProductName + ': ' + element.ProductAmount + '</div>'
+                          });
+                      }
+                    return result;
+                  }},columnToApply ]
+           });
+           $("#ordersTable").bootstrapTable("hideLoading");
+        },
+        error: function(){
+           alert("Błąd wczytania danych!")
+        }
+        });
+})
+    function deleteOrder(id){
+        var url = '@Url.Action("DeleteOrder","Home")' + '?id=' +id;
+            $.ajax({
+                url: url,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+        })
+    }
+</script>
+
