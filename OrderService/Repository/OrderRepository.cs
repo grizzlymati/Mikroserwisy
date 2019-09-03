@@ -23,14 +23,13 @@ namespace OrderService.Repository
 
         public IEnumerable<Order> GetOrdersByUserID(int userId)
         {
+            if(userId == -1) return _dbContext.Orders;
             return _dbContext.Orders.Where(x => x.UserId == userId);
         }
 
         public int DeleteOrder(int orderId)
         {
-            Order order = _dbContext.Orders.Find(orderId);
-            if (CanDeleteOrder(order.StatusCode))
-            {
+            Order order = _dbContext.Orders.FirstOrDefault(x=> x.Id == orderId);
                 ReleasedProductsDataEvent releasedProductsDataEvent = new ReleasedProductsDataEvent() { ProductsDetails = _converter.CommandToEvent(order.OrdersData) };
                 _eventEmitter.EmitReleasedProductsDataEvent(releasedProductsDataEvent);
 
@@ -38,11 +37,6 @@ namespace OrderService.Repository
                 SaveChanges();
 
                 return (int)DeleteOrderStatusCode.DeletedSuccessfuly;
-            }
-            else
-            {
-                return (int)DeleteOrderStatusCode.WrongOrderStatus;
-            }
         }
 
         public void InsertOrder(Order order)

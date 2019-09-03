@@ -13,7 +13,6 @@
                 <input style="width:250px;margin:5px" type="text" class="form-control" id="InputDescription" aria-describedby="Description" placeholder="Description">
                 <input style="width:250px;margin:5px;display:inline-block;text-align:center" type="text" pattern="\d+" class="form-control" id="InputPrice" aria-describedby="Price" placeholder="Price">
                 <input style="width:250px;margin:5px;display:inline-block;text-align:center" type="text" onkeypress="return (event.charCode == 8 || event.charCode == 0 || event.charCode == 13) ? null : event.charCode >= 48 && event.charCode <= 57"  class="form-control" id="InputAvailableAmount" aria-describedby="AvailableAmount" placeholder="Available amount">
-                
             </form>
         </div>
         <div class="modal-footer">
@@ -103,6 +102,7 @@
         }
         });
 })
+
     function changeAmount(id, type){
         let number = parseInt($("#" +  id).text(),10);
         let productAmount = $table.bootstrapTable('getRowByUniqueId', id).amount;
@@ -133,10 +133,18 @@
     }
 
     function sendOrder(){       
-        var self = this; 
+        var userId;
+        if("@Model.Login" == "Admin"){
+            userId = -1;
+        }else if("@Model.Login" == "User1"){
+            userId = 1;
+        }else if("@Model.Login" == "User2"){
+            userId = 2;
+        }
+
         $.post({
         url: '@Url.Action("SendOrder", "Home")',
-        data: {'orderData':this.selectedObjects},
+        data: {'orderData':this.selectedObjects, 'userId':userId},
         success: function(){
            window.location.reload(true);
            alert("Ordered!")

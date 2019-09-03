@@ -2,6 +2,7 @@
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using WebApplication.Enum;
 using WebApplication.Models;
 using WebApplication.Services;
 
@@ -50,13 +51,13 @@ namespace WebApplication.Controllers
             return new JsonResult(products);
         }
 
-        public IActionResult SendOrder(ProductOrderDetails[] orderData)
+        public IActionResult SendOrder(ProductOrderDetails[] orderData, int userId)
         {
             Order newOrder = new Order();
             newOrder.OrdersData = JsonConvert.SerializeObject(orderData);
             newOrder.OrderDate = DateTime.Now;
-            newOrder.UserId = 0;
-            newOrder.StatusCode = 0;
+            newOrder.UserId = userId;
+            newOrder.StatusCode = (int)OrderStatusCode.Ordered;
 
             HttpStatusCode statusCode = _orderServiceClient.CreateNewOrder(newOrder);
             if (statusCode.ToString() == "OK") return Ok();
@@ -77,9 +78,9 @@ namespace WebApplication.Controllers
             return Conflict();
         }
 
-        public JsonResult GetAllOrders()
+        public JsonResult GetAllOrders(int userId)
         {
-            var products = _orderServiceClient.GetAllOrders(-1);
+            var products = _orderServiceClient.GetAllOrders(userId);
             return new JsonResult(products);
         }
 
